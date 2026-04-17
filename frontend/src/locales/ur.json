@@ -1,0 +1,33 @@
+{
+  "common": {
+    "welcome": "خوش آمدید",
+    "dashboard": "ڈیش بورڈ",
+    "courses": "کورسز",
+    "classes": "کلاسز",
+    "results": "نتائج",
+    "students": "طلباء",
+    "enrollments": "اندراجات",
+    "payments": "ادائیگیاں",
+    "announcements": "اعلانات",
+    "settings": "ترتیبات",
+    "logout": "لاگ آؤٹ",
+    "login": "لاگ ان",
+    "enroll_now": "ابھی اندراج کریں",
+    "admin": "ایڈمن",
+    "student": "طالب علم",
+    "home": "ہوم",
+    "about": "ہمارے بارے میں",
+    "contact": "رابطہ کریں",
+    "admin_panel": "ایڈمن پینل",
+    "subscription_alert": "رکنیت کی اطلاع",
+    "expiry_warning": "آپ کی رکنیت {{days}} دنوں میں ختم ہو جائے گی۔",
+    "expired": "آپ کی رکنیت ختم ہو چکی ہے!"
+  },
+  "auth": {
+    "sign_in": "سائن ان کریں",
+    "email": "ای میل ایڈریس",
+    "password": "پاس ورڈ",
+    "no_account": "کیا آپ کا اکاؤنٹ نہیں ہے؟",
+    "register": "رجسٹر کریں"
+  }
+}

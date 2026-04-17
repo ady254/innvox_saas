@@ -1,0 +1,33 @@
+{
+  "common": {
+    "welcome": "स्वागत है",
+    "dashboard": "डैशबोर्ड",
+    "courses": "कोर्स",
+    "classes": "कक्षाएं",
+    "results": "परिणाम",
+    "students": "छात्र",
+    "enrollments": "नामांकन",
+    "payments": "भुगतान",
+    "announcements": "घोषणाएं",
+    "settings": "सेटिंग्स",
+    "logout": "लॉग आउट",
+    "login": "लॉगिन",
+    "enroll_now": "अभी नामांकन करें",
+    "admin": "व्यवस्थापक",
+    "student": "छात्र",
+    "home": "मुख्य पृष्ठ",
+    "about": "हमारे बारे में",
+    "contact": "संपर्क करें",
+    "admin_panel": "व्यवस्थापक पैनल",
+    "subscription_alert": "सदस्यता चेतावनी",
+    "expiry_warning": "आपकी सदस्यता {{days}} दिनों में समाप्त हो जाएगी।",
+    "expired": "आपकी सदस्यता समाप्त हो गई है!"
+  },
+  "auth": {
+    "sign_in": "साइन इन करें",
+    "email": "ईमेल पता",
+    "password": "पासवर्ड",
+    "no_account": "क्या आपका खाता नहीं है?",
+    "register": "पंजीकरण करें"
+  }
+}

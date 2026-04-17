@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 
 class UserRole(str, enum.Enum):
+    super_admin = "super_admin"
     admin = "admin"
     student = "student"
 
@@ -29,7 +30,7 @@ class User(Base):
     password = Column(String(255), nullable=False)  # store hashed password
     role = Column(Enum(UserRole, name="user_role"), nullable=False)
 
-    client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     # Relationships

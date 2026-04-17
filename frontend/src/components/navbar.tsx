@@ -3,13 +3,16 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 import { type Me, clearToken, fetchMe, getToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useTenant } from "./tenant-provider";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Navbar() {
+  const { t } = useTranslation();
   const { client } = useTenant();
   const pathname = usePathname();
   const router = useRouter();
@@ -56,33 +59,35 @@ export function Navbar() {
           </Link>
 
           <nav className="hidden items-center gap-6 md:flex">
-            {navLink("/", "Home")}
-            {navLink("/courses", "Courses")}
-            {navLink("/about", "About")}
-            {navLink("/contact", "Contact")}
+            {navLink("/", t("common.home") || "Home")}
+            {navLink("/courses", t("common.courses") || "Courses")}
+            {navLink("/about", t("common.about") || "About")}
+            {navLink("/contact", t("common.contact") || "Contact")}
           </nav>
         </div>
 
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
+          
           {!authed ? (
             <>
               <Link href="/login" className="hidden text-sm font-medium text-white/70 hover:text-white sm:block">
-                Login
+                {t("common.login") || "Login"}
               </Link>
               <Link href="/signup">
                 <Button size="sm" className="bg-brand hover:brightness-110">
-                  Get Started
+                  {t("common.enroll_now") || "Get Started"}
                 </Button>
               </Link>
             </>
           ) : (
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="text-sm font-medium text-white/70 hover:text-white">
-                Dashboard
+                {t("common.dashboard") || "Dashboard"}
               </Link>
               {me?.role === "admin" && (
                 <Link href="/admin" className="text-sm font-medium text-brand hover:brightness-110">
-                  Admin Panel
+                  {t("common.admin_panel") || "Admin Panel"}
                 </Link>
               )}
               <Button
@@ -95,7 +100,7 @@ export function Navbar() {
                   router.push("/login");
                 }}
               >
-                Logout
+                {t("common.logout") || "Logout"}
               </Button>
             </div>
           )}

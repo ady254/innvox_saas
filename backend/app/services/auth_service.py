@@ -37,12 +37,23 @@ class AuthService:
 
     @staticmethod
     async def login_user(db: AsyncSession, payload: UserLogin, client_id: int) -> TokenResponse:
-        res = await db.execute(
-            select(User).where(User.email == payload.email.lower().strip(), User.client_id == client_id)
+        res_super = await db.execute(
+            select(User).where(
+                User.email == payload.email.lower().strip(), 
+                User.role == UserRole.super_admin
+            )
         )
-        user = res.scalar_one_or_none()
-        if user is None or not verify_password(payload.password, user.password):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+        super_admin = res_super.scalar_one_or_none()
+        
+        if super_admin and verify_password(payload.password, super_admin.password):
+            user = super_admin
+        else:
+            res = await db.execute(
+                select(User).where(User.email == payload.email.lower().strip(), User.client_id == client_id)
+            )
+            user = res.scalar_one_or_none()
+            if user is None or not verify_password(payload.password, user.password):
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
         token = create_access_token(
             data={

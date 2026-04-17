@@ -4,6 +4,10 @@ export type ClientConfig = {
   domain?: string;
   primary_color?: string;
   logo?: string | null;
+  plan?: string;
+  expiry_date?: string | null;
+  allowed_languages?: string[];
+  active_features?: string[];
 };
 
 export type Course = {
@@ -308,4 +312,133 @@ export async function adminDeleteTestimonial(id: number) {
     method: "DELETE",
     auth: true,
   });
+}
+
+// --- Announcements ---
+
+export type Announcement = {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  priority: string;
+  created_at: string;
+};
+
+export async function fetchGeneralAnnouncements(): Promise<Announcement[]> {
+  return apiFetch<Announcement[]>(`/announcements/general`);
+}
+
+export async function fetchStudentAnnouncements(): Promise<Announcement[]> {
+  return apiFetch<Announcement[]>(`/announcements/student`, { auth: true });
+}
+
+export async function adminCreateAnnouncement(payload: Partial<Announcement>) {
+  return apiFetch<{ message: string; announcement_id: number }>(`/admin/announcement`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminListAnnouncements(): Promise<Announcement[]> {
+  return apiFetch<Announcement[]>(`/admin/announcements`, { auth: true });
+}
+
+export async function adminDeleteAnnouncement(id: number) {
+  return apiFetch(`/admin/announcement/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
+// --- Contact Settings ---
+
+export type ContactSettings = {
+  id: number;
+  phones: string[];
+  emails: string[];
+  address: string;
+  updated_at: string | null;
+};
+
+export async function fetchContactInfo(): Promise<ContactSettings> {
+  // Use public endpoint if it exists, otherwise use admin if needed. 
+  // Let's assume we use /admin/contact-info for now OR add a public one.
+  // The plan mentioned GET /contact-info (admin) and GET /contact-info (public).
+  // Actually I added GET /admin/contact-info. I'll add a public one in admin_routes or a separate one.
+  return apiFetch<ContactSettings>(`/admin/contact-info`, { auth: false }); 
+}
+
+export async function adminGetContactInfo(): Promise<ContactSettings> {
+  return apiFetch<ContactSettings>(`/admin/contact-info`, { auth: true });
+}
+
+export async function adminUpdateContactInfo(payload: Partial<ContactSettings>) {
+  return apiFetch<ContactSettings>(`/admin/contact-info`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+// --- Super Admin ---
+
+export type ClientData = {
+  id: number;
+  name: string;
+  domain: string;
+  plan: string;
+  is_active: boolean;
+  expiry_date: string | null;
+  created_at: string | null;
+};
+
+export async function superAdminListClients(): Promise<{ clients: ClientData[] }> {
+  return apiFetch<{ clients: ClientData[] }>(`/super-admin/clients`, { auth: true });
+}
+
+export async function superAdminCreateClient(payload: any) {
+  return apiFetch(`/super-admin/client`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function superAdminUpdateClient(id: number, payload: Partial<ClientData>) {
+  return apiFetch(`/super-admin/client/${id}`, {
+    method: "PUT",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function superAdminResetPassword(payload: { user_id: number; new_password: string }) {
+  return apiFetch(`/super-admin/reset-admin-password`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export type PlatformAnnouncement = {
+  id: number;
+  message: string;
+  type: string;
+  priority: string;
+  target: string;
+  created_at: string;
+};
+
+export async function superAdminCreatePlatformAnnouncement(payload: Partial<PlatformAnnouncement>) {
+  return apiFetch(`/super-admin/announcement`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchPlatformAnnouncements(): Promise<{ announcements: PlatformAnnouncement[] }> {
+  return apiFetch<{ announcements: PlatformAnnouncement[] }>(`/super-admin/announcements`);
 }

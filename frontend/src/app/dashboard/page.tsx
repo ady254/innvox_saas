@@ -6,15 +6,23 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchMyCourses } from "@/lib/api";
+import { fetchMyCourses, fetchStudentAnnouncements, type Announcement } from "@/lib/api";
+import { Bell, Zap } from "lucide-react";
 
 export default function DashboardPage() {
   const [data, setData] = React.useState<{ count: number; courses: any[] } | null>(null);
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    fetchMyCourses()
-      .then(setData)
+    Promise.all([
+      fetchMyCourses(),
+      fetchStudentAnnouncements()
+    ])
+      .then(([coursesData, announceData]) => {
+        setData(coursesData);
+        setAnnouncements(announceData);
+      })
       .catch((e: unknown) => setError(e instanceof Error ? e.message : "Failed to load dashboard"));
   }, []);
 
@@ -22,8 +30,41 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-white/70">Your enrolled courses.</p>
+        <p className="text-white/70">Your enrolled courses and latest updates.</p>
       </div>
+
+      {/* Student Announcements */}
+      {announcements.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-brand">
+            <Bell className="h-4 w-4" />
+            <span>Latest Updates</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {announcements.map((a) => (
+              <div
+                key={a.id}
+                className={`flex flex-col gap-1 rounded-xl border p-4 transition-all ${
+                  a.priority === "high"
+                    ? "border-orange-500/50 bg-orange-500/10 shadow-lg shadow-orange-500/5"
+                    : "border-white/10 bg-white/5"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold flex items-center gap-2">
+                    {a.priority === "high" && <Zap className="h-3 w-3 text-orange-500 fill-orange-500" />}
+                    {a.title}
+                  </h3>
+                  <span className="text-[10px] text-white/30">
+                    {new Date(a.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed">{a.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm">{error}</div>}
 

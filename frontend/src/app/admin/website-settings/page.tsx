@@ -1,6 +1,17 @@
 "use client";
 import React from "react";
-import { fetchPageContent, updatePageContent, PageContent } from "@/lib/api";
+import { 
+  fetchPageContent, 
+  updatePageContent, 
+  PageContent, 
+  fetchTestimonials, 
+  adminAddTestimonial, 
+  adminDeleteTestimonial, 
+  Testimonial,
+  adminGetContactInfo,
+  adminUpdateContactInfo,
+  ContactSettings
+} from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,17 +23,13 @@ import {
   Mail, 
   Save, 
   Loader2, 
-  Star, 
   Plus, 
   Trash2, 
-  MessageSquare 
+  MessageSquare,
+  Phone,
+  PlusCircle,
+  X
 } from "lucide-react";
-import { 
-  fetchTestimonials, 
-  adminAddTestimonial, 
-  adminDeleteTestimonial, 
-  Testimonial 
-} from "@/lib/api";
 
 type PageType = "home" | "about" | "contact" | "testimonials";
 
@@ -35,6 +42,15 @@ export default function AdminPages() {
     banner_image: "",
     cta_text: "",
   });
+  
+  const [contactSettings, setContactSettings] = React.useState<ContactSettings>({
+    id: 0,
+    phones: [],
+    emails: [],
+    address: "",
+    updated_at: ""
+  });
+
   const [testimonials, setTestimonials] = React.useState<Testimonial[]>([]);
   const [newTestimonial, setNewTestimonial] = React.useState<Partial<Testimonial>>({
     name: "",
@@ -52,6 +68,13 @@ export default function AdminPages() {
       if (activeTab === "testimonials") {
         const data = await fetchTestimonials();
         setTestimonials(data);
+      } else if (activeTab === "contact") {
+        const [page, contact] = await Promise.all([
+          fetchPageContent("contact"),
+          adminGetContactInfo()
+        ]);
+        setFormData(page);
+        setContactSettings(contact);
       } else {
         const data = await fetchPageContent(activeTab);
         setFormData(data);
@@ -72,7 +95,14 @@ export default function AdminPages() {
     setSaving(true);
     setMessage(null);
     try {
-      await updatePageContent(activeTab as any, formData);
+      if (activeTab === "contact") {
+        await Promise.all([
+          updatePageContent("contact", formData),
+          adminUpdateContactInfo(contactSettings)
+        ]);
+      } else {
+        await updatePageContent(activeTab as any, formData);
+      }
       setMessage({ type: "success", text: "Page content updated successfully!" });
     } catch (err) {
       console.error("Failed to save:", err);
@@ -81,6 +111,23 @@ export default function AdminPages() {
       setSaving(false);
     }
   };
+
+  // Dynamic Contact Handlers
+  const addPhone = () => setContactSettings({ ...contactSettings, phones: [...contactSettings.phones, ""] });
+  const updatePhone = (index: number, val: string) => {
+    const newPhones = [...contactSettings.phones];
+    newPhones[index] = val;
+    setContactSettings({ ...contactSettings, phones: newPhones });
+  };
+  const removePhone = (index: number) => setContactSettings({ ...contactSettings, phones: contactSettings.phones.filter((_, i) => i !== index) });
+
+  const addEmail = () => setContactSettings({ ...contactSettings, emails: [...contactSettings.emails, ""] });
+  const updateEmail = (index: number, val: string) => {
+    const newEmails = [...contactSettings.emails];
+    newEmails[index] = val;
+    setContactSettings({ ...contactSettings, emails: newEmails });
+  };
+  const removeEmail = (index: number) => setContactSettings({ ...contactSettings, emails: contactSettings.emails.filter((_, i) => i !== index) });
 
   const handleAddTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -272,15 +319,78 @@ export default function AdminPages() {
                         />
                       </div>
                     )}
+                    
+                    {activeTab === "contact" && (
+                      <div className="md:col-span-2 space-y-6 border-y border-white/5 py-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-bold uppercase tracking-widest text-brand">Phone Numbers</label>
+                            <Button type="button" variant="ghost" size="sm" onClick={addPhone} className="text-brand h-7">
+                              <PlusCircle className="mr-1 h-3 w-3" /> Add Phone
+                            </Button>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {contactSettings.phones.map((p, i) => (
+                              <div key={i} className="flex gap-2">
+                                <Input 
+                                  value={p} 
+                                  onChange={(e) => updatePhone(i, e.target.value)}
+                                  placeholder="+91 99999 99999"
+                                  className="bg-white/5 border-white/10 h-9"
+                                />
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removePhone(i)} className="text-white/20 hover:text-red-400 h-9 w-9">
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <label className="text-sm font-bold uppercase tracking-widest text-brand">Email Addresses</label>
+                            <Button type="button" variant="ghost" size="sm" onClick={addEmail} className="text-brand h-7">
+                              <PlusCircle className="mr-1 h-3 w-3" /> Add Email
+                            </Button>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            {contactSettings.emails.map((em, i) => (
+                              <div key={i} className="flex gap-2">
+                                <Input 
+                                  value={em} 
+                                  onChange={(e) => updateEmail(i, e.target.value)}
+                                  placeholder="contact@academy.com"
+                                  className="bg-white/5 border-white/10 h-9"
+                                />
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removeEmail(i)} className="text-white/20 hover:text-red-400 h-9 w-9">
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-bold uppercase tracking-widest text-brand">Office Address</label>
+                          <Textarea 
+                            value={contactSettings.address}
+                            onChange={(e) => setContactSettings({ ...contactSettings, address: e.target.value })}
+                            placeholder="Full physical address..."
+                            className="bg-white/5 border-white/10 min-h-[80px]"
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     <div className="md:col-span-2 space-y-2">
                       <label className="text-sm font-medium">
-                        {activeTab === "contact" ? "Address / Location Info" : "Main Content"}
+                        {activeTab === "contact" ? "Contact Page Content (Extra)" : "Main Content"}
                       </label>
                       <Textarea
                         value={formData.content || ""}
                         onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                        placeholder={activeTab === "contact" ? "123 Learning Lane..." : "Tell your story..."}
-                        className="min-h-[200px] bg-white/5 border-white/10 focus:border-brand resize-none"
+                        placeholder={activeTab === "contact" ? "Brief description or message..." : "Tell your story..."}
+                        className="min-h-[150px] bg-white/5 border-white/10 focus:border-brand resize-none"
                       />
                     </div>
                   </div>

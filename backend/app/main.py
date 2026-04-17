@@ -20,6 +20,8 @@ from app.routes.student_routes import router as student_router
 from app.routes.page_routes import router as page_router
 from app.routes.lead_routes import router as lead_router
 from app.routes.testimonial_routes import router as testimonial_router
+from app.routes.announcement_routes import router as announcement_router
+from app.routes.super_admin_routes import router as super_admin_router
 
 # #region agent log
 def _agent_log(hypothesisId: str, location: str, message: str, data: dict | None = None, runId: str = "pre-fix") -> None:
@@ -82,6 +84,8 @@ app.include_router(student_router)
 app.include_router(page_router)
 app.include_router(lead_router)
 app.include_router(testimonial_router)
+app.include_router(announcement_router)
+app.include_router(super_admin_router, prefix="/super-admin")
 
 @app.get("/")
 def home():

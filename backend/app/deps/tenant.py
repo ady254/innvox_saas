@@ -18,12 +18,24 @@ def get_tenant(request: Request) -> TenantState:
 
 async def get_current_user_for_tenant(request: Request, db: AsyncSession) -> User:
     """Load User from JWT and enforce JWT tenant matches Host-resolved tenant."""
-    tenant = get_tenant(request)
     state_user = getattr(request.state, "user", None)
     if not state_user or not state_user.get("id"):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
     user_id = int(state_user["id"])
+    role = state_user.get("role")
+    
+    from app.models.user import UserRole
+    if role == UserRole.super_admin.value:
+        res = await db.execute(select(User).where(User.id == user_id))
+        user = res.scalar_one_or_none()
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        # Bypass tenant requirements for super admin
+        request.state.client = None
+        return user
+
+    tenant = get_tenant(request)
     jwt_client_id = state_user.get("client_id")
     if jwt_client_id is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")

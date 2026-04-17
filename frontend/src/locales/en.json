@@ -1,0 +1,33 @@
+{
+  "common": {
+    "welcome": "Welcome",
+    "dashboard": "Dashboard",
+    "courses": "Courses",
+    "classes": "Classes",
+    "results": "Results",
+    "students": "Students",
+    "enrollments": "Enrollments",
+    "payments": "Payments",
+    "announcements": "Announcements",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "enroll_now": "Enroll Now",
+    "admin": "Admin",
+    "student": "Student",
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "admin_panel": "Admin Panel",
+    "subscription_alert": "Subscription Alert",
+    "expiry_warning": "Your subscription expires in {{days}} days.",
+    "expired": "Your subscription has expired!"
+  },
+  "auth": {
+    "sign_in": "Sign In",
+    "email": "Email Address",
+    "password": "Password",
+    "no_account": "Don't have an account?",
+    "register": "Register"
+  }
+}

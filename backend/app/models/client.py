@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, func, JSON
 from sqlalchemy.orm import relationship
 
 from app.config.db import Base
@@ -24,8 +25,11 @@ class Client(Base):
     primary_color = Column(String(50), nullable=False)
     logo = Column(String(1024), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default="true")
+    plan = Column(String(50), nullable=False, server_default="starter")  # starter, growth, premium
+    expiry_date = Column(DateTime(timezone=True), nullable=True)
     razorpay_key = Column(String(255), nullable=False)
     razorpay_secret = Column(String(255), nullable=False)
+    allowed_languages = Column(JSON, default=lambda: ["en", "hi", "ur"])
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
     # Relationships

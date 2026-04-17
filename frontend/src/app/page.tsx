@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { AnnouncementBanner } from "@/components/announcements/announcement-banner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { 
   fetchPageContent, 
@@ -99,7 +100,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col gap-24 pb-20">
+    <div className="flex flex-col gap-12 pb-20">
+      <AnnouncementBanner />
       {/* 1. HERO SECTION */}
       <section className="relative flex min-h-[60vh] flex-col items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-brand/20 via-black to-black px-6 py-20 text-center">
         <div className="absolute inset-0 -z-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
