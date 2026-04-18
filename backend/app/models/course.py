@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import TYPE_CHECKING
-
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.config.db import Base
@@ -22,6 +21,16 @@ class Course(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     price = Column(Integer, nullable=False)
+
+    # Advanced Course Fields
+    cover_image_url = Column(String(255), nullable=True)
+    is_free = Column(Boolean, default=False)
+    currency = Column(String(10), default="INR")
+    duration = Column(String(50), nullable=True)
+    level = Column(String(50), nullable=True) # beginner, intermediate, advanced
+    instructor_name = Column(String(255), nullable=True)
+    type = Column(String(50), default="self-paced") # self-paced, live
+    has_certificate = Column(Boolean, default=False)
 
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

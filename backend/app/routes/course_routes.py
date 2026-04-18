@@ -38,6 +38,14 @@ async def list_courses(request: Request, db: AsyncSession = Depends(get_db)):
             "price": c.price,
             "client_id": c.client_id,
             "is_enrolled": c.id in enrolled_ids,
+            "cover_image_url": c.cover_image_url,
+            "is_free": c.is_free,
+            "currency": c.currency,
+            "duration": c.duration,
+            "level": c.level,
+            "instructor_name": c.instructor_name,
+            "type": c.type,
+            "has_certificate": c.has_certificate,
         }
         for c in rows
     ]

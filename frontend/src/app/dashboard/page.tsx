@@ -28,9 +28,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-white/70">Your enrolled courses and latest updates.</p>
+      <div className="flex justify-between items-center">
+        <div>
+           <h1 className="text-2xl font-semibold">Dashboard</h1>
+           <p className="text-white/70">Your enrolled courses and latest updates.</p>
+        </div>
+        <Link href="/dashboard/certificates">
+           <Button variant="outline" className="border-brand/30 text-brand hover:bg-brand/10">🎓 My Certificates</Button>
+        </Link>
       </div>
 
       {/* Student Announcements */}

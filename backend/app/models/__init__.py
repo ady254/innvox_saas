@@ -17,3 +17,4 @@ from .announcement import Announcement  # noqa: F401
 from .contact_settings import ContactSettings  # noqa: F401
 from .platform_announcement import PlatformAnnouncement  # noqa: F401
 from .feature_toggle import Feature, PlanFeature, ClientFeature  # noqa: F401
+from .certificate import Certificate  # noqa: F401

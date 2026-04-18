@@ -12,7 +12,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.config.db import SessionLocal
 from app.models.client import Client
 from app.schemas.tenant import TenantState
+import time
 
+# Simple In-Memory Cache for Scalability
+# host -> (timestamp, client_row, features)
+_CLIENT_CACHE: dict[str, tuple[float, Client, set[str]]] = {}
+CACHE_TTL = 300  # 5 minutes
 
 def _host_from_request(request: Request) -> str:
     # 1. 🔥 PRIORITY: custom header from frontend
@@ -93,6 +98,16 @@ class TenantMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         host = _host_from_request(request)
+        
+        # 🏎️ Check Cache First
+        now_ts = time.time()
+        if host in _CLIENT_CACHE:
+            ts, cached_client, cached_features = _CLIENT_CACHE[host]
+            if now_ts - ts < CACHE_TTL:
+                request.state.client = _to_tenant_state(cached_client)
+                request.state.active_features = cached_features
+                return await call_next(request)
+
         client_row = await _resolve_client_row(host)
 
         if client_row is None:
@@ -115,11 +130,14 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 }
             )
 
-        request.state.client = _to_tenant_state(client_row)
-        
-        # Load active features
-        request.state.active_features = await _resolve_active_features(
+        active_features = await _resolve_active_features(
             client_row.id, client_row.plan
         )
+
+        # 🏎️ Update Cache
+        _CLIENT_CACHE[host] = (now_ts, client_row, active_features)
+
+        request.state.client = _to_tenant_state(client_row)
+        request.state.active_features = active_features
         
         return await call_next(request)

@@ -46,12 +46,13 @@ async def lifespan(app: FastAPI):
     # Create tables automatically on startup
     _agent_log("H_STARTUP", "app/main.py:BEFORE_CREATE_ALL", "About to run Base.metadata.create_all() (async)", {})
     try:
+        # We use a connection check to verify DB is up before attempting create_all
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         _agent_log("H_STARTUP", "app/main.py:AFTER_CREATE_ALL", "create_all() succeeded", {})
     except Exception as e:
         _agent_log("H_DB_AUTH", "app/main.py:CREATE_ALL_FAILED", "create_all() raised exception", {"error": repr(e), "type": type(e).__name__})
-        print(f"Database initialization failed: {e}")
+        print(f"Database initialization FAILED (skipping table creation): {e}")
     yield
 
 app = FastAPI(lifespan=lifespan)

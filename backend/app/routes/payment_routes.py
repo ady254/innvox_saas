@@ -71,3 +71,33 @@ async def verify_payment(payload: VerifyPaymentRequest, request: Request, db: As
         },
     }
 
+@router.post("/enroll-free/{course_id}", status_code=status.HTTP_201_CREATED)
+async def enroll_free(course_id: int, request: Request, db: AsyncSession = Depends(get_db)):
+    user = await get_current_user_for_tenant(request, db)
+    tenant = get_tenant(request)
+
+    course_res = await db.execute(
+        select(Course).where(Course.id == course_id, Course.client_id == tenant.id)
+    )
+    course = course_res.scalar_one_or_none()
+    if course is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+    if course.client_id != user.client_id or user.client_id != tenant.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cross-tenant access denied")
+
+    if not course.is_free:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This course requires payment")
+
+    enrollment = await EnrollmentService.enroll_user(db=db, user=user, course_id=course.id)
+    return {
+        "message": "Enrolled in free course successfully",
+        "enrollment": {
+            "id": enrollment.id,
+            "user_id": enrollment.user_id,
+            "course_id": enrollment.course_id,
+            "client_id": enrollment.client_id,
+            "payment_status": enrollment.payment_status.value,
+        },
+    }
+
+

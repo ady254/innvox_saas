@@ -17,6 +17,22 @@ export type Course = {
   price: number;
   client_id: number;
   is_enrolled?: boolean;
+  cover_image_url?: string | null;
+  is_free?: boolean;
+  currency?: string;
+  duration?: string | null;
+  level?: string | null;
+  instructor_name?: string | null;
+  type?: string;
+  has_certificate?: boolean;
+};
+
+export type Certificate = {
+  id: number;
+  user_id: number;
+  course_id: number;
+  file_url: string;
+  issued_at: string;
 };
 
 type ApiOptions = Omit<RequestInit, "headers"> & {
@@ -126,6 +142,13 @@ export async function verifyPayment(payload: {
   });
 }
 
+export async function studentEnrollFreeCourse(courseId: number) {
+  return apiFetch(`/enroll-free/${courseId}`, {
+    method: "POST",
+    auth: true,
+  });
+}
+
 export async function fetchMyCourses() {
   return apiFetch<{ count: number; courses: Course[] }>(`/my-courses`, {
     method: "GET",
@@ -145,16 +168,28 @@ export async function fetchMe(): Promise<Me> {
   return apiFetch<Me>(`/auth/me`, { method: "GET", auth: true });
 }
 
-export async function adminCreateCourse(payload: {
-  title: string;
-  description: string;
-  price: number;
-}) {
+export async function adminCreateCourse(payload: Partial<Course>) {
   return apiFetch<{ message: string; course: Course }>(`/admin/course`, {
     method: "POST",
     auth: true,
     body: JSON.stringify(payload),
   });
+}
+
+export async function adminCreateCertificate(payload: { user_id: number; course_id: number; file_url: string }) {
+  return apiFetch<{ message: string }>(`/admin/certificate`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminGetCertificates() {
+  return apiFetch<{ certificates: Certificate[] }>(`/admin/certificates`, { method: "GET", auth: true });
+}
+
+export async function studentGetMyCertificates() {
+  return apiFetch<{ certificates: Certificate[] }>(`/my-certificates`, { method: "GET", auth: true });
 }
 
 export async function adminListStudents() {

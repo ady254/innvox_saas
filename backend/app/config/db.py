@@ -55,7 +55,7 @@ _agent_log(
 # #endregion agent log
 
 # Create async engine
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=os.getenv("DATABASE_ECHO", "false").lower() == "true")
 
 # Create async session factory
 SessionLocal = async_sessionmaker(

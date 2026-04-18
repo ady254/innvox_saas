@@ -147,7 +147,16 @@ async def get_platform_announcements(
     # We should filter by target if necessary.
     res = await db.execute(select(PlatformAnnouncement).order_by(PlatformAnnouncement.created_at.desc()).limit(10))
     announcements = res.scalars().all()
-    
+    return {
+        "announcements": [
+            {
+                "id": a.id,
+                "message": a.message,
+                "type": a.type,
+                "priority": a.priority,
+                "target": a.target,
+                "created_at": a.created_at.isoformat() if a.created_at else None
+            } for a in announcements
         ]
     }
 

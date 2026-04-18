@@ -10,7 +10,8 @@ from app.models.user import User
 from app.models.enrollment import Enrollment
 from app.models.announcement import Announcement
 from app.models.contact_settings import ContactSettings
-from app.schemas.admin_schema import AdminCourseCreate
+from app.models.certificate import Certificate
+from app.schemas.admin_schema import AdminCourseCreate, CertificateCreate
 from app.schemas.class_schema import ClassCreate
 from app.schemas.result_schema import ResultCreate
 from app.schemas.announcement_schema import AnnouncementCreate, AnnouncementResponse
@@ -37,6 +38,14 @@ async def admin_create_course(
         title=payload.title,
         description=payload.description,
         price=payload.price,
+        cover_image_url=payload.cover_image_url,
+        is_free=payload.is_free,
+        currency=payload.currency,
+        duration=payload.duration,
+        level=payload.level,
+        instructor_name=payload.instructor_name,
+        type=payload.type,
+        has_certificate=payload.has_certificate
     )
     return {
         "message": "Course created",
@@ -49,6 +58,46 @@ async def admin_create_course(
         },
     }
 
+@router.post("/certificate", status_code=status.HTTP_201_CREATED, dependencies=[require_feature("certificates")])
+async def admin_create_certificate(
+    payload: CertificateCreate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    certificate = Certificate(
+        client_id=tenant.id,
+        user_id=payload.user_id,
+        course_id=payload.course_id,
+        file_url=payload.file_url
+    )
+    db.add(certificate)
+    await db.commit()
+    return {"message": "Certificate assigned successfully"}
+
+@router.get("/certificates", dependencies=[require_feature("certificates")])
+async def admin_get_certificates(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    res = await db.execute(
+        select(Certificate).where(Certificate.client_id == tenant.id).order_by(desc(Certificate.issued_at))
+    )
+    certs = res.scalars().all()
+    return {
+        "certificates": [
+            {
+                "id": c.id,
+                "user_id": c.user_id,
+                "course_id": c.course_id,
+                "file_url": c.file_url,
+                "issued_at": c.issued_at.isoformat() if c.issued_at else None
+            } for c in certs
+        ]
+    }
 
 @router.get("/students")
 async def admin_students(
