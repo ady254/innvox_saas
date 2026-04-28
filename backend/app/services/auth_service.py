@@ -1,11 +1,13 @@
+import secrets
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
-from app.models.user import User, UserRole
-from app.schemas.auth_schema import TokenResponse, UserLogin, UserSignup
-from app.utils.hash import hash_password, verify_password
-from app.utils.jwt import create_access_token
+from ..models.user import User, UserRole
+from ..schemas.auth_schema import TokenResponse, UserLogin, UserSignup, ForgotPasswordRequest, ResetPasswordRequest
+from ..utils.hash import hash_password, verify_password
+from ..utils.jwt import create_access_token
 
 
 class AuthService:
@@ -17,7 +19,7 @@ class AuthService:
                 User.client_id == client_id,
             )
         )
-        if existing.scalar_one_or_none() is not None:
+        if existing.scalars().first() is not None:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered for this tenant")
 
         n_users = await db.scalar(select(func.count()).select_from(User).where(User.client_id == client_id)) or 0
@@ -43,15 +45,18 @@ class AuthService:
                 User.role == UserRole.super_admin
             )
         )
-        super_admin = res_super.scalar_one_or_none()
+        super_admin = res_super.scalars().first()
         
         if super_admin and verify_password(payload.password, super_admin.password):
             user = super_admin
         else:
             res = await db.execute(
-                select(User).where(User.email == payload.email.lower().strip(), User.client_id == client_id)
+                select(User).where(
+                    User.email == payload.email.lower().strip(), 
+                    User.client_id == client_id
+                )
             )
-            user = res.scalar_one_or_none()
+            user = res.scalars().first()
             if user is None or not verify_password(payload.password, user.password):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
@@ -63,5 +68,51 @@ class AuthService:
                 "role": user.role.value,
             }
         )
-        return TokenResponse(access_token=token)
+        return TokenResponse(
+            success=True, 
+            token=token, 
+            access_token=token, 
+            token_type="bearer", 
+            role=user.role.value
+        )
 
+    @staticmethod
+    async def forgot_password(db: AsyncSession, payload: ForgotPasswordRequest, client_id: int) -> dict:
+        res = await db.execute(
+            select(User).where(
+                User.email == payload.email.lower().strip(),
+                User.client_id == client_id
+            )
+        )
+        user = res.scalars().first()
+        if user:
+            token = secrets.token_urlsafe(32)
+            user.reset_token = token
+            user.reset_token_expiry = datetime.now(timezone.utc) + timedelta(minutes=15)
+            await db.commit()
+            
+            # TODO: Integrate with an email service provider
+            print(f"--- RESET PASSWORD LINK FOR {user.email} ---")
+            print(f"Token: {token}")
+            print("---------------------------------------------")
+
+        return {"success": True, "message": "Password reset link sent to your email"}
+
+    @staticmethod
+    async def reset_password(db: AsyncSession, payload: ResetPasswordRequest) -> dict:
+        res = await db.execute(
+            select(User).where(
+                User.reset_token == payload.token
+            )
+        )
+        user = res.scalars().first()
+        
+        if not user or user.reset_token != payload.token or user.reset_token_expiry is None or user.reset_token_expiry < datetime.now(timezone.utc):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired link")
+
+        user.password = hash_password(payload.new_password)
+        user.reset_token = None
+        user.reset_token_expiry = None
+        await db.commit()
+        
+        return {"success": True, "message": "Password updated successfully"}

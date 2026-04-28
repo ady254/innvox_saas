@@ -2,20 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.config.db import get_db
-from app.deps.roles import require_super_admin
-from app.models.client import Client
-from app.models.user import User, UserRole
-from app.models.platform_announcement import PlatformAnnouncement
-from app.schemas.super_admin_schema import (
+from ..config.db import get_db
+from ..deps.roles import require_super_admin
+from ..models.client import Client
+from ..models.user import User, UserRole
+from ..models.platform_announcement import PlatformAnnouncement
+from ..schemas.super_admin_schema import (
     SuperAdminClientCreate, 
     SuperAdminClientUpdate, 
     SuperAdminResetPassword,
     PlatformAnnouncementCreate
 )
-from app.models.feature_toggle import Feature, ClientFeature
+from ..models.feature_toggle import Feature, ClientFeature
 from pydantic import BaseModel
-from app.utils.hash import hash_password
+from ..utils.hash import hash_password
 
 router = APIRouter(tags=["super-admin"])
 
@@ -36,8 +36,31 @@ async def super_admin_list_clients(
                 "is_active": c.is_active,
                 "expiry_date": c.expiry_date.isoformat() if c.expiry_date else None,
                 "created_at": c.created_at.isoformat() if c.created_at else None,
+                "razorpay_key": c.razorpay_key,
+                "razorpay_secret": c.razorpay_secret,
             }
             for c in clients
+        ]
+    }
+
+@router.get("/client/{client_id}/admins")
+async def super_admin_get_client_admins(
+    client_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_super_admin),
+):
+    res = await db.execute(
+        select(User).where(User.client_id == client_id, User.role == UserRole.admin)
+    )
+    admins = res.scalars().all()
+    return {
+        "admins": [
+            {
+                "id": a.id,
+                "name": a.name,
+                "email": a.email,
+                "created_at": a.created_at.isoformat() if a.created_at else None
+            } for a in admins
         ]
     }
 
@@ -100,8 +123,14 @@ async def super_admin_update_client(
         client.plan = payload.plan
     if payload.is_active is not None:
         client.is_active = payload.is_active
+    if payload.is_maintenance is not None:
+        client.is_maintenance = payload.is_maintenance
     if payload.expiry_date is not None:
         client.expiry_date = payload.expiry_date
+    if payload.razorpay_key is not None:
+        client.razorpay_key = payload.razorpay_key
+    if payload.razorpay_secret is not None:
+        client.razorpay_secret = payload.razorpay_secret
 
     await db.commit()
     return {"message": "Client updated successfully"}

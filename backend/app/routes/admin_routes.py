@@ -3,23 +3,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, desc
 from typing import List
 
-from app.config.db import get_db
-from app.deps.roles import require_admin, require_feature
-from app.deps.tenant import get_tenant
-from app.models.user import User
-from app.models.enrollment import Enrollment
-from app.models.announcement import Announcement
-from app.models.contact_settings import ContactSettings
-from app.models.certificate import Certificate
-from app.schemas.admin_schema import AdminCourseCreate, CertificateCreate
-from app.schemas.class_schema import ClassCreate
-from app.schemas.result_schema import ResultCreate
-from app.schemas.announcement_schema import AnnouncementCreate, AnnouncementResponse
-from app.schemas.contact_schema import ContactSettingsCreate, ContactSettingsResponse
-from app.services.admin_service import AdminService
-from app.services.class_service import ClassService
-from app.services.result_service import ResultService
-from app.services.enrollment_service import EnrollmentService
+from ..config.db import get_db
+from ..deps.roles import require_admin, require_feature
+from ..deps.tenant import get_tenant
+from ..models.user import User
+from ..models.enrollment import Enrollment
+from ..models.announcement import Announcement
+from ..models.contact_settings import ContactSettings
+from ..models.certificate import Certificate
+from ..schemas.admin_schema import AdminCourseCreate, CertificateCreate
+from ..schemas.class_schema import ClassCreate
+from ..schemas.result_schema import ResultCreate
+from ..schemas.announcement_schema import AnnouncementCreate, AnnouncementResponse
+from ..schemas.contact_schema import ContactSettingsCreate, ContactSettingsResponse
+from ..services.admin_service import AdminService
+from ..services.class_service import ClassService
+from ..services.result_service import ResultService
+from ..services.enrollment_service import EnrollmentService
 
 router = APIRouter(tags=["admin"])
 

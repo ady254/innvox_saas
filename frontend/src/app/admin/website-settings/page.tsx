@@ -26,12 +26,12 @@ import {
   Plus, 
   Trash2, 
   MessageSquare,
-  Phone,
+  Layout,
   PlusCircle,
   X
 } from "lucide-react";
 
-type PageType = "home" | "about" | "contact" | "testimonials";
+type PageType = "home" | "about" | "contact" | "testimonials" | "navbar";
 
 export default function AdminPages() {
   const [activeTab, setActiveTab] = React.useState<PageType>("home");
@@ -50,6 +50,8 @@ export default function AdminPages() {
     address: "",
     updated_at: ""
   });
+
+  const [navbarLinks, setNavbarLinks] = React.useState<{href: string, label: string}[]>([]);
 
   const [testimonials, setTestimonials] = React.useState<Testimonial[]>([]);
   const [newTestimonial, setNewTestimonial] = React.useState<Partial<Testimonial>>({
@@ -75,6 +77,28 @@ export default function AdminPages() {
         ]);
         setFormData(page);
         setContactSettings(contact);
+      } else if (activeTab === "navbar") {
+        const data = await fetchPageContent("navbar");
+        setFormData(data);
+        if (data.content) {
+          try {
+             setNavbarLinks(JSON.parse(data.content));
+          } catch(e) {
+             setNavbarLinks([
+                { href: "/", label: "Home" },
+                { href: "/courses", label: "Courses" },
+                { href: "/about", label: "About" },
+                { href: "/contact", label: "Contact" }
+             ]);
+          }
+        } else {
+             setNavbarLinks([
+                { href: "/", label: "Home" },
+                { href: "/courses", label: "Courses" },
+                { href: "/about", label: "About" },
+                { href: "/contact", label: "Contact" }
+             ]);
+        }
       } else {
         const data = await fetchPageContent(activeTab);
         setFormData(data);
@@ -100,10 +124,16 @@ export default function AdminPages() {
           updatePageContent("contact", formData),
           adminUpdateContactInfo(contactSettings)
         ]);
+      } else if (activeTab === "navbar") {
+        await updatePageContent("navbar", {
+           ...formData,
+           title: "Navbar Settings",
+           content: JSON.stringify(navbarLinks)
+        });
       } else {
         await updatePageContent(activeTab as any, formData);
       }
-      setMessage({ type: "success", text: "Page content updated successfully!" });
+      setMessage({ type: "success", text: "Settings updated successfully!" });
     } catch (err) {
       console.error("Failed to save:", err);
       setMessage({ type: "error", text: "Failed to save changes. Please try again." });
@@ -158,6 +188,7 @@ export default function AdminPages() {
     { id: "home", label: "Home Page", icon: Home },
     { id: "about", label: "About Page", icon: Info },
     { id: "contact", label: "Contact Page", icon: Mail },
+    { id: "navbar", label: "Navigation Bar", icon: Layout },
     { id: "testimonials", label: "Testimonials", icon: MessageSquare },
   ];
 
@@ -270,6 +301,67 @@ export default function AdminPages() {
                 ))}
               </div>
             </div>
+          ) : activeTab === "navbar" ? (
+             <Card className="border-white/10 bg-white/5 shadow-xl animate-in fade-in duration-300">
+               <CardHeader>
+                  <CardTitle>Navbar Links</CardTitle>
+                  <CardDescription>Customize the links that appear in the top navigation bar.</CardDescription>
+               </CardHeader>
+               <CardContent>
+                  <form onSubmit={handleSaveContent} className="space-y-6">
+                     <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                           <label className="text-sm font-bold uppercase tracking-widest text-brand">Links</label>
+                           <Button type="button" variant="ghost" size="sm" className="text-brand h-7" onClick={() => setNavbarLinks([...navbarLinks, {href: "", label: ""}])}>
+                              <PlusCircle className="mr-1 h-3 w-3" /> Add Link
+                           </Button>
+                        </div>
+                        <div className="space-y-3">
+                           {navbarLinks.map((link, i) => (
+                              <div key={i} className="flex gap-2">
+                                 <Input 
+                                    value={link.label}
+                                    onChange={(e) => {
+                                       const newLinks = [...navbarLinks];
+                                       newLinks[i].label = e.target.value;
+                                       setNavbarLinks(newLinks);
+                                    }}
+                                    placeholder="Label (e.g. Home)"
+                                    className="bg-white/5 border-white/10"
+                                 />
+                                 <Input 
+                                    value={link.href}
+                                    onChange={(e) => {
+                                       const newLinks = [...navbarLinks];
+                                       newLinks[i].href = e.target.value;
+                                       setNavbarLinks(newLinks);
+                                    }}
+                                    placeholder="URL (e.g. /)"
+                                    className="bg-white/5 border-white/10"
+                                 />
+                                 <Button type="button" variant="ghost" size="icon" className="text-white/20 hover:text-red-400" onClick={() => setNavbarLinks(navbarLinks.filter((_, idx) => idx !== i))}>
+                                    <X className="h-4 w-4" />
+                                 </Button>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
+                     <div className="flex items-center justify-between border-t border-white/10 pt-6">
+                        <div>
+                           {message && (
+                              <p className={cn("text-sm font-medium animate-in fade-in", message.type === "success" ? "text-green-400" : "text-red-400")}>
+                                 {message.text}
+                              </p>
+                           )}
+                        </div>
+                        <Button type="submit" disabled={saving} className="bg-brand hover:brightness-110 text-white min-w-[140px]">
+                           {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                           Save Navbar
+                        </Button>
+                     </div>
+                  </form>
+               </CardContent>
+            </Card>
           ) : (
             <Card className="border-white/10 bg-white/5 shadow-xl animate-in fade-in duration-300">
               <CardHeader>
@@ -284,7 +376,7 @@ export default function AdminPages() {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Page Title</label>
                       <Input
-                        value={formData.title}
+                        value={formData.title || ""}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         placeholder="Welcome to our academy"
                         className="bg-white/5 border-white/10 focus:border-brand"

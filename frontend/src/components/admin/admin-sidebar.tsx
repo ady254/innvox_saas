@@ -24,7 +24,7 @@ const items = [
   { href: "/admin/payments", label: "common.payments", icon: CreditCard, feature: "payments" },
   { href: "/admin/classes", label: "common.classes", icon: GraduationCap, feature: "classes" },
   { href: "/admin/results", label: "common.results", icon: BookOpen, feature: "results" },
-  { href: "/admin/website-settings", label: "common.settings", icon: LayoutDashboard, feature: "all" },
+  { href: "/admin/website-settings", label: "common.settings", icon: LayoutDashboard, feature: "website_settings" },
   { href: "/admin/announcements", label: "common.announcements", icon: Megaphone, feature: "announcements" },
 ];
 

@@ -1,4 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { fetchClientConfig, ClientConfig } from "@/lib/api";
+import { PlatformAnnouncements } from "@/components/PlatformAnnouncements";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +18,14 @@ import {
 } from "lucide-react";
 
 export default function AdminHomePage() {
+  const [config, setConfig] = useState<ClientConfig | null>(null);
+
+  useEffect(() => {
+    fetchClientConfig().then(setConfig).catch(console.error);
+  }, []);
+
+  const activeFeatures = config?.active_features || [];
+
   const quickLinks = [
     {
       title: "Add course",
@@ -20,49 +33,56 @@ export default function AdminHomePage() {
       href: "/admin/add-course",
       icon: PlusCircle,
       color: "text-brand",
-      buttonVariant: "default" as const
+      buttonVariant: "default" as const,
+      feature: "courses"
     },
     {
       title: "Students",
       description: "View all student accounts",
       href: "/admin/students",
       icon: Users,
-      buttonVariant: "secondary" as const
+      buttonVariant: "secondary" as const,
+      feature: "all"
     },
     {
       title: "Enrollments",
       description: "Who enrolled in what",
       href: "/admin/enrollments",
       icon: GraduationCap,
-      buttonVariant: "secondary" as const
+      buttonVariant: "secondary" as const,
+      feature: "all"
     },
     {
       title: "Payments",
       description: "Enrollment payment history",
       href: "/admin/payments",
       icon: CreditCard,
-      buttonVariant: "secondary" as const
+      buttonVariant: "secondary" as const,
+      feature: "payments"
     },
     {
       title: "Classes",
       description: "Manage live class sessions",
       href: "/admin/classes",
       icon: GraduationCap,
-      buttonVariant: "secondary" as const
+      buttonVariant: "secondary" as const,
+      feature: "classes"
     },
     {
       title: "Results",
       description: "Post and manage student results",
       href: "/admin/results",
       icon: BookOpen,
-      buttonVariant: "secondary" as const
+      buttonVariant: "secondary" as const,
+      feature: "results"
     },
     {
       title: "Website Settings",
       description: "Customize landing page content",
       href: "/admin/website-settings",
       icon: LayoutDashboard,
-      buttonVariant: "secondary" as const
+      buttonVariant: "secondary" as const,
+      feature: "website_settings"
     },
     {
       title: "Announcements",
@@ -70,9 +90,14 @@ export default function AdminHomePage() {
       href: "/admin/announcements",
       icon: Megaphone,
       color: "text-brand",
-      buttonVariant: "default" as const
+      buttonVariant: "default" as const,
+      feature: "announcements"
     },
   ];
+
+  const visibleLinks = quickLinks.filter(link => 
+    link.feature === "all" || activeFeatures.includes(link.feature)
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -83,8 +108,10 @@ export default function AdminHomePage() {
         </p>
       </div>
 
+      <PlatformAnnouncements />
+
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {quickLinks.map((link) => (
+        {visibleLinks.map((link) => (
           <Card key={link.href} className="border-white/10 bg-white/5 shadow-xl group hover:border-brand/50 transition-all duration-300">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between mb-2">

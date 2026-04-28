@@ -18,10 +18,31 @@ export function Navbar() {
   const router = useRouter();
   const [authed, setAuthed] = useState(false);
   const [me, setMe] = useState<Me | null>(null);
+  const [navLinks, setNavLinks] = useState<{href: string, label: string}[]>([
+    { href: "/", label: t("common.home") || "Home" },
+    { href: "/courses", label: t("common.courses") || "Courses" },
+    { href: "/about", label: t("common.about") || "About" },
+    { href: "/contact", label: t("common.contact") || "Contact" }
+  ]);
 
   useEffect(() => {
     const token = getToken();
     setAuthed(!!token);
+    
+    // Fetch custom navbar
+    import("@/lib/api").then(({ fetchPageContent }) => {
+      fetchPageContent("navbar").then(data => {
+        if (data && data.content) {
+          try {
+             const links = JSON.parse(data.content);
+             if (Array.isArray(links) && links.length > 0) {
+               setNavLinks(links);
+             }
+          } catch(e) {}
+        }
+      }).catch(() => {});
+    });
+
     if (!token) {
       setMe(null);
       return;
@@ -32,13 +53,14 @@ export function Navbar() {
         setMe(null);
         setAuthed(false);
       });
-  }, [pathname]);
+  }, [pathname, t]);
 
-  const navLink = (href: string, label: string) => (
+  const renderNavLink = (href: string, label: string) => (
     <Link
+      key={href}
       href={href}
       className={cn(
-        "text-sm font-medium transition-colors hover:text-brand",
+        "text-sm font-medium transition-colors hover:text-brand whitespace-nowrap",
         pathname === href ? "text-brand" : "text-white/70"
       )}
     >
@@ -58,11 +80,8 @@ export function Navbar() {
             )}
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex">
-            {navLink("/", t("common.home") || "Home")}
-            {navLink("/courses", t("common.courses") || "Courses")}
-            {navLink("/about", t("common.about") || "About")}
-            {navLink("/contact", t("common.contact") || "Contact")}
+          <nav className="hidden items-center gap-6 md:flex overflow-x-auto">
+            {navLinks.map(link => renderNavLink(link.href, link.label))}
           </nav>
         </div>
 
@@ -86,9 +105,14 @@ export function Navbar() {
                 {t("common.dashboard") || "Dashboard"}
               </Link>
               {me?.role === "admin" && (
-                <Link href="/admin" className="text-sm font-medium text-brand hover:brightness-110">
-                  {t("common.admin_panel") || "Admin Panel"}
-                </Link>
+                <>
+                  <Link href="/admin" className="text-sm font-medium text-brand hover:brightness-110">
+                    {t("common.admin_panel") || "Admin Panel"}
+                  </Link>
+                  <Link href="/admin/support" className="text-sm font-medium text-white/70 hover:text-white">
+                    Support
+                  </Link>
+                </>
               )}
               <Button
                 variant="ghost"

@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 
 
 class UserSignup(BaseModel):
@@ -13,5 +14,17 @@ class UserLogin(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    access_token: str
+    success: bool = True
+    token: str
+    access_token: Optional[str] = None # For compatibility
     token_type: str = "bearer"
+    role: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=255)
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8, max_length=128)

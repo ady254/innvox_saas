@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.db import get_db
-from app.deps.tenant import get_current_user_for_tenant
-from app.models.user import User, UserRole
+from ..config.db import get_db
+from ..deps.tenant import get_current_user_for_tenant
+from ..models.user import User, UserRole
 
 PLAN_FEATURES = {
     "starter": {"courses", "payments"},
@@ -33,7 +33,7 @@ def require_feature(feature: str):
     def dep(request: Request):
         # Super Admins bypass feature gating
         user_data = getattr(request.state, "user", None)
-        if user_data and user_data.get("role") == UserRole.super_admin:
+        if user_data and user_data.get("role") == UserRole.super_admin.value:
             return
 
         active_features = getattr(request.state, "active_features", set())

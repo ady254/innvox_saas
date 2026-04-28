@@ -32,6 +32,9 @@ class User(Base):
 
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expiry = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     client = relationship("Client", back_populates="users")

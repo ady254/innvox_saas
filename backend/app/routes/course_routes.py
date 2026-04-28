@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config.db import get_db
-from app.deps.tenant import get_tenant
-from app.models.course import Course
+from ..config.db import get_db
+from ..deps.tenant import get_tenant
+from ..models.course import Course
 
 router = APIRouter(tags=["courses"])
 
@@ -21,7 +21,7 @@ async def list_courses(request: Request, db: AsyncSession = Depends(get_db)):
     enrolled_ids = set()
     user_state = getattr(request.state, "user", None)
     if user_state and user_state.get("id"):
-        from app.models.enrollment import Enrollment
+        from ..models.enrollment import Enrollment
         enroll_res = await db.execute(
             select(Enrollment.course_id).where(
                 Enrollment.user_id == int(user_state["id"]),

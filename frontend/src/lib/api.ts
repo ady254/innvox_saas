@@ -68,7 +68,6 @@ async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
     ...(options.headers || {}),
   };
 
-  // 🔥 ADD THIS (IMPORTANT)
   if (typeof window !== "undefined") {
     headers["X-Tenant-Domain"] = window.location.hostname;
   }
@@ -85,11 +84,24 @@ async function apiFetch<T>(path: string, options: ApiOptions = {}): Promise<T> {
     headers,
   });
 
-  if (!res.ok) {
-    throw new Error(`API Error: ${res.status}`);
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      console.warn("Unauthorized! Clearing token and redirecting...");
+      clearToken();
+      window.location.href = "/login";
+    }
   }
 
-  return (await res.json()) as T;
+  const data = await res.json();
+  if (!res.ok || data.success === false) {
+    let errMsg = data.message || data.detail;
+    if (typeof errMsg === "object" && errMsg !== null) {
+      errMsg = errMsg.message || errMsg.detail || JSON.stringify(errMsg);
+    }
+    throw new Error(errMsg || `API Error: ${res.status}`);
+  }
+
+  return data as T;
 }
 
 /** Tenant branding: backend resolves tenant from the Host header (same origin as API base URL). */
@@ -109,14 +121,28 @@ export async function signup(payload: { name: string; email: string; password: s
 }
 
 export async function login(payload: { email: string; password: string }) {
-  return apiFetch<{ access_token: string; token_type: string }>(`/auth/login`, {
+  return apiFetch<{ success: boolean; token: string; role: string }>(`/auth/login`, {
     method: "POST",
     body: JSON.stringify({ email: payload.email, password: payload.password }),
   });
 }
 
+export async function forgotPassword(payload: { email: string }) {
+  return apiFetch<{ success: boolean; message: string }>(`/auth/forgot-password`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function resetPassword(payload: { token: string; new_password: string }) {
+  return apiFetch<{ success: boolean; message: string }>(`/auth/reset-password`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function fetchCourses(): Promise<Course[]> {
-  return apiFetch<Course[]>(`/courses`, { method: "GET" });
+  return apiFetch<Course[]>(`/courses`, { method: "GET", auth: true });
 }
 
 export async function createOrder(courseId: number) {
@@ -402,7 +428,7 @@ export async function fetchContactInfo(): Promise<ContactSettings> {
   // Let's assume we use /admin/contact-info for now OR add a public one.
   // The plan mentioned GET /contact-info (admin) and GET /contact-info (public).
   // Actually I added GET /admin/contact-info. I'll add a public one in admin_routes or a separate one.
-  return apiFetch<ContactSettings>(`/admin/contact-info`, { auth: false }); 
+  return apiFetch<ContactSettings>(`/admin/contact-info`, { auth: false });
 }
 
 export async function adminGetContactInfo(): Promise<ContactSettings> {
@@ -425,8 +451,38 @@ export type ClientData = {
   domain: string;
   plan: string;
   is_active: boolean;
+  is_maintenance: boolean;
   expiry_date: string | null;
   created_at: string | null;
+  razorpay_key?: string;
+  razorpay_secret?: string;
+};
+
+export type AdminUser = {
+  id: number;
+  name: string;
+  email: string;
+  created_at: string | null;
+};
+
+export type SupportTicket = {
+  id: number;
+  client_id: number;
+  user_name?: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority: string;
+  created_at: string;
+  client_name?: string;
+};
+
+export type SupportTicketResponse = {
+  id: number;
+  message: string;
+  user_name: string;
+  is_internal?: number;
+  created_at: string;
 };
 
 export async function superAdminListClients(): Promise<{ clients: ClientData[] }> {
@@ -476,4 +532,86 @@ export async function superAdminCreatePlatformAnnouncement(payload: Partial<Plat
 
 export async function fetchPlatformAnnouncements(): Promise<{ announcements: PlatformAnnouncement[] }> {
   return apiFetch<{ announcements: PlatformAnnouncement[] }>(`/super-admin/announcements`);
+}
+
+export type Feature = {
+  id: number;
+  name: string;
+  display_name: string;
+};
+
+export type ClientFeatureOverride = {
+  id: number;
+  feature_name: string;
+  is_enabled: boolean;
+};
+
+export async function superAdminListFeatures() {
+  return apiFetch<{ features: Feature[] }>(`/super-admin/features`, { auth: true });
+}
+
+export async function superAdminGetClientFeatures(clientId: number) {
+  return apiFetch<{ overrides: ClientFeatureOverride[] }>(`/super-admin/client-feature/${clientId}`, { auth: true });
+}
+
+export async function superAdminSetClientFeature(payload: { client_id: number; feature_name: string; is_enabled: boolean }) {
+  return apiFetch<{ message: string }>(`/super-admin/client-feature`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function superAdminGetClientAdmins(clientId: number) {
+  return apiFetch<{ admins: AdminUser[] }>(`/super-admin/client/${clientId}/admins`, { auth: true });
+}
+
+// --- Support Tickets ---
+
+export async function fetchMySupportTickets() {
+  return apiFetch<{ tickets: Partial<SupportTicket>[] }>(`/support/tickets`, { auth: true });
+}
+
+export async function fetchSupportTicketDetails(ticketId: number) {
+  return apiFetch<{ ticket: SupportTicket; responses: SupportTicketResponse[] }>(`/support/tickets/${ticketId}`, { auth: true });
+}
+
+export async function createSupportTicket(payload: { subject: string; description: string; priority: string }) {
+  return apiFetch<{ message: string; ticket_id: number }>(`/support/tickets`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function respondToSupportTicket(ticketId: number, message: string) {
+  return apiFetch<{ message: string }>(`/support/tickets/${ticketId}/respond`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify({ message }),
+  });
+}
+
+export async function superAdminGetAllTickets() {
+  return apiFetch<{ tickets: SupportTicket[] }>(`/support/admin/tickets`, { auth: true });
+}
+
+export async function superAdminGetSupportTicketDetails(ticketId: number) {
+  return apiFetch<{ ticket: SupportTicket; responses: SupportTicketResponse[] }>(`/support/admin/tickets/${ticketId}`, { auth: true });
+}
+
+export async function superAdminRespondToSupportTicket(ticketId: number, message: string, isInternal: number = 0) {
+  return apiFetch<{ message: string }>(`/support/admin/tickets/${ticketId}/respond`, {
+    method: "POST",
+    auth: true,
+    body: JSON.stringify({ message, is_internal: isInternal }),
+  });
+}
+
+export async function superAdminUpdateSupportTicketStatus(ticketId: number, payload: { status?: string; priority?: string }) {
+  return apiFetch<{ message: string }>(`/support/admin/tickets/${ticketId}/status`, {
+    method: "PUT",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
 }

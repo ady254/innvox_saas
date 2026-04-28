@@ -14,7 +14,10 @@ class SuperAdminClientCreate(BaseModel):
 class SuperAdminClientUpdate(BaseModel):
     plan: Optional[str] = None
     is_active: Optional[bool] = None
+    is_maintenance: Optional[bool] = None
     expiry_date: Optional[datetime] = None
+    razorpay_key: Optional[str] = None
+    razorpay_secret: Optional[str] = None
 
 class SuperAdminResetPassword(BaseModel):
     user_id: int

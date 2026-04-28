@@ -130,6 +130,15 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 }
             )
 
+        if client_row.is_maintenance:
+             return JSONResponse(
+                status_code=503,
+                content={
+                    "code": "MAINTENANCE_MODE",
+                    "message": "This site is currently undergoing scheduled maintenance. Please check back later."
+                }
+            )
+
         active_features = await _resolve_active_features(
             client_row.id, client_row.plan
         )

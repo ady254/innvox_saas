@@ -3,10 +3,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from typing import List
 
-from app.config.db import get_db
-from app.deps.tenant import get_tenant
-from app.models.announcement import Announcement
-from app.schemas.announcement_schema import AnnouncementResponse
+from ..config.db import get_db
+from ..deps.tenant import get_tenant
+from ..models.announcement import Announcement
+from ..schemas.announcement_schema import AnnouncementResponse
 
 router = APIRouter(tags=["announcements"])
 

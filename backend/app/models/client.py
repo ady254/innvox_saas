@@ -25,6 +25,7 @@ class Client(Base):
     primary_color = Column(String(50), nullable=False)
     logo = Column(String(1024), nullable=True)
     is_active = Column(Boolean, nullable=False, server_default="true")
+    is_maintenance = Column(Boolean, nullable=False, server_default="false")
     plan = Column(String(50), nullable=False, server_default="starter")  # starter, growth, premium
     expiry_date = Column(DateTime(timezone=True), nullable=True)
     razorpay_key = Column(String(255), nullable=False)

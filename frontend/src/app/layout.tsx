@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { TenantProvider } from "@/components/tenant-provider";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Innvox SaaS",
@@ -32,8 +33,8 @@ export default function RootLayout({
             </div>
           </TenantProvider>
         </I18nProvider>
+        <Toaster theme="dark" richColors />
       </body>
     </html>
   );
 }
-

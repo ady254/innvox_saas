@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, AlertCircle, Send, Plus } from "lucide-react";
+import { PlatformAnnouncements } from "@/components/PlatformAnnouncements";
 
 export default function AdminAnnouncements() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -70,6 +71,8 @@ export default function AdminAnnouncements() {
         <h1 className="text-3xl font-bold tracking-tight">Announcement System</h1>
         <p className="text-white/50 text-sm">Broadcast updates to your home page or student dashboard.</p>
       </div>
+
+      <PlatformAnnouncements />
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* CREATE FORM */}
