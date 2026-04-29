@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
               </CardDescription>
             </CardHeader>
             <CardFooter>
-              <Link href="/forgot-password" size="sm" className="w-full">
+              <Link href="/forgot-password" className="w-full">
                 <Button variant="outline" className="w-full border-white/10 hover:bg-white/10 text-white">
                   Get New Link
                 </Button>
@@ -132,5 +132,13 @@ export default function ResetPasswordPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <React.Suspense fallback={<div className="flex items-center justify-center min-h-[80vh]"><Loader2 className="h-8 w-8 animate-spin text-white" /></div>}>
+      <ResetPasswordForm />
+    </React.Suspense>
   );
 }
