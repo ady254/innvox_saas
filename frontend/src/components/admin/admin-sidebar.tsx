@@ -12,18 +12,21 @@ import {
   GraduationCap,
   LayoutDashboard,
   Users,
-  Megaphone
+  Megaphone,
+  Inbox
 } from "lucide-react";
 
 const items = [
   { href: "/admin", label: "common.dashboard", icon: LayoutDashboard, feature: "all" },
-  { href: "/admin/add-course", label: "common.courses", icon: BookOpen, feature: "courses" },
+  { href: "/admin/courses", label: "common.courses", icon: BookOpen, feature: "all" },
+  { href: "/admin/add-course", label: "common.add_course", icon: BookOpen, feature: "courses" },
   { href: "/admin/certificates", label: "common.certificates", icon: GraduationCap, feature: "certificates" },
   { href: "/admin/students", label: "common.students", icon: Users, feature: "all" },
   { href: "/admin/enrollments", label: "common.enrollments", icon: GraduationCap, feature: "all" },
   { href: "/admin/payments", label: "common.payments", icon: CreditCard, feature: "payments" },
   { href: "/admin/classes", label: "common.classes", icon: GraduationCap, feature: "classes" },
   { href: "/admin/results", label: "common.results", icon: BookOpen, feature: "results" },
+  { href: "/admin/leads", label: "common.leads", icon: Inbox, feature: "all" },
   { href: "/admin/website-settings", label: "common.settings", icon: LayoutDashboard, feature: "website_settings" },
   { href: "/admin/announcements", label: "common.announcements", icon: Megaphone, feature: "announcements" },
 ];

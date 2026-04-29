@@ -11,11 +11,14 @@ from ..models.enrollment import Enrollment
 from ..models.announcement import Announcement
 from ..models.contact_settings import ContactSettings
 from ..models.certificate import Certificate
-from ..schemas.admin_schema import AdminCourseCreate, CertificateCreate
+from ..models.course import Course
+from ..models.lead import Lead
+from ..schemas.admin_schema import AdminCourseCreate, AdminCourseUpdate, CertificateCreate
 from ..schemas.class_schema import ClassCreate
 from ..schemas.result_schema import ResultCreate
 from ..schemas.announcement_schema import AnnouncementCreate, AnnouncementResponse
 from ..schemas.contact_schema import ContactSettingsCreate, ContactSettingsResponse
+from ..schemas.lead_schema import LeadResponse
 from ..services.admin_service import AdminService
 from ..services.class_service import ClassService
 from ..services.result_service import ResultService
@@ -57,6 +60,93 @@ async def admin_create_course(
             "client_id": course.client_id,
         },
     }
+
+
+@router.get("/courses")
+async def admin_list_courses(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    res = await db.execute(
+        select(Course).where(Course.client_id == tenant.id).order_by(Course.id.desc())
+    )
+    rows = res.scalars().all()
+    return {
+        "courses": [
+            {
+                "id": c.id,
+                "title": c.title,
+                "description": c.description,
+                "price": c.price,
+                "cover_image_url": c.cover_image_url,
+                "is_free": c.is_free,
+                "currency": c.currency,
+                "duration": c.duration,
+                "level": c.level,
+                "instructor_name": c.instructor_name,
+                "type": c.type,
+                "has_certificate": c.has_certificate,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+            }
+            for c in rows
+        ]
+    }
+
+
+@router.put("/course/{course_id}")
+async def admin_update_course(
+    course_id: int,
+    payload: AdminCourseUpdate,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    res = await db.execute(
+        select(Course).where(Course.id == course_id, Course.client_id == tenant.id)
+    )
+    course = res.scalar_one_or_none()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    update_data = payload.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(course, field, value)
+
+    await db.commit()
+    await db.refresh(course)
+    return {
+        "message": "Course updated successfully",
+        "course": {
+            "id": course.id,
+            "title": course.title,
+            "description": course.description,
+            "price": course.price,
+        },
+    }
+
+
+@router.delete("/course/{course_id}")
+async def admin_delete_course(
+    course_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    res = await db.execute(
+        select(Course).where(Course.id == course_id, Course.client_id == tenant.id)
+    )
+    course = res.scalar_one_or_none()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    await db.delete(course)
+    await db.commit()
+    return {"message": "Course deleted successfully"}
+
 
 @router.post("/certificate", status_code=status.HTTP_201_CREATED, dependencies=[require_feature("certificates")])
 async def admin_create_certificate(
@@ -368,3 +458,39 @@ async def admin_update_contact_info(
     await db.commit()
     await db.refresh(contact)
     return contact
+
+# --- Leads / Inquiries Management ---
+
+@router.get("/leads", response_model=List[LeadResponse])
+async def admin_list_leads(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    res = await db.execute(
+        select(Lead)
+        .where(Lead.client_id == tenant.id)
+        .order_by(desc(Lead.created_at))
+    )
+    return res.scalars().all()
+
+@router.delete("/leads/{lead_id}")
+async def admin_delete_lead(
+    lead_id: int,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    tenant = get_tenant(request)
+    res = await db.execute(
+        select(Lead).where(Lead.id == lead_id, Lead.client_id == tenant.id)
+    )
+    lead = res.scalar_one_or_none()
+    if not lead:
+        raise HTTPException(status_code=404, detail="Lead not found")
+
+    await db.delete(lead)
+    await db.commit()
+    return {"message": "Lead deleted successfully"}
+

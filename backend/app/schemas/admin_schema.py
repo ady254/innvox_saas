@@ -14,6 +14,19 @@ class AdminCourseCreate(BaseModel):
     type: str = "self-paced"
     has_certificate: bool = False
 
+class AdminCourseUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=255)
+    description: Optional[str] = Field(None, min_length=1)
+    price: Optional[int] = Field(None, ge=0)
+    cover_image_url: Optional[str] = None
+    is_free: Optional[bool] = None
+    currency: Optional[str] = None
+    duration: Optional[str] = None
+    level: Optional[str] = None
+    instructor_name: Optional[str] = None
+    type: Optional[str] = None
+    has_certificate: Optional[bool] = None
+
 class CertificateCreate(BaseModel):
     user_id: int
     course_id: int

@@ -14,7 +14,8 @@ import {
   CreditCard, 
   BookOpen, 
   LayoutDashboard, 
-  Megaphone 
+  Megaphone,
+  Inbox 
 } from "lucide-react";
 
 export default function AdminHomePage() {
@@ -28,12 +29,20 @@ export default function AdminHomePage() {
 
   const quickLinks = [
     {
-      title: "Add course",
+      title: "Courses",
+      description: "View, edit & manage all courses",
+      href: "/admin/courses",
+      icon: BookOpen,
+      color: "text-brand",
+      buttonVariant: "default" as const,
+      feature: "all"
+    },
+    {
+      title: "Add Course",
       description: "Create a new course listing",
       href: "/admin/add-course",
       icon: PlusCircle,
-      color: "text-brand",
-      buttonVariant: "default" as const,
+      buttonVariant: "secondary" as const,
       feature: "courses"
     },
     {
@@ -75,6 +84,14 @@ export default function AdminHomePage() {
       icon: BookOpen,
       buttonVariant: "secondary" as const,
       feature: "results"
+    },
+    {
+      title: "Leads",
+      description: "View contact form submissions",
+      href: "/admin/leads",
+      icon: Inbox,
+      buttonVariant: "secondary" as const,
+      feature: "all"
     },
     {
       title: "Website Settings",

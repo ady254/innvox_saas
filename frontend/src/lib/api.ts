@@ -202,6 +202,26 @@ export async function adminCreateCourse(payload: Partial<Course>) {
   });
 }
 
+export async function adminListCourses() {
+  return apiFetch<{ courses: (Course & { created_at?: string })[] }>(`/admin/courses`, { method: "GET", auth: true });
+}
+
+export async function adminUpdateCourse(courseId: number, payload: Partial<Course>) {
+  return apiFetch<{ message: string; course: Course }>(`/admin/course/${courseId}`, {
+    method: "PUT",
+    auth: true,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function adminDeleteCourse(courseId: number) {
+  return apiFetch<{ message: string }>(`/admin/course/${courseId}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
+
 export async function adminCreateCertificate(payload: { user_id: number; course_id: number; file_url: string }) {
   return apiFetch<{ message: string }>(`/admin/certificate`, {
     method: "POST",
@@ -413,7 +433,30 @@ export async function adminDeleteAnnouncement(id: number) {
   });
 }
 
+// --- Leads / Inquiries ---
+
+export type Lead = {
+  id: number;
+  client_id: number;
+  name: string;
+  email: string;
+  message: string;
+  created_at: string;
+};
+
+export async function adminListLeads(): Promise<Lead[]> {
+  return apiFetch<Lead[]>(`/admin/leads`, { auth: true });
+}
+
+export async function adminDeleteLead(id: number) {
+  return apiFetch<{ message: string }>(`/admin/leads/${id}`, {
+    method: "DELETE",
+    auth: true,
+  });
+}
+
 // --- Contact Settings ---
+
 
 export type ContactSettings = {
   id: number;

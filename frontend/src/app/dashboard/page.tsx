@@ -33,9 +33,14 @@ export default function DashboardPage() {
            <h1 className="text-2xl font-semibold">Dashboard</h1>
            <p className="text-white/70">Your enrolled courses and latest updates.</p>
         </div>
-        <Link href="/dashboard/certificates">
-           <Button variant="outline" className="border-brand/30 text-brand hover:bg-brand/10">🎓 My Certificates</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/dashboard/results">
+             <Button variant="outline" className="border-brand/30 text-brand hover:bg-brand/10">📊 My Results</Button>
+          </Link>
+          <Link href="/dashboard/certificates">
+             <Button variant="outline" className="border-brand/30 text-brand hover:bg-brand/10">🎓 My Certificates</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Student Announcements */}
